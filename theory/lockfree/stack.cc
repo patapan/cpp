@@ -1,26 +1,35 @@
 // Lockfree stack
 
 #include <atomic>
-#include <thread>
+#include <list>
+
+// NOT DONE
 
 template <typename T>
 class Stack {
-    T* head;
-    std::atomic_bool flag;
-    
-    Stack() {
-        flag.clear();
+ private:
+    struct Node {
+        T data;
+        Node* next;
+
+        Node(T const data) : data(data) {}
+    };
+
+ public:
+    std::atomic<Node*> head;
+
+    Node* get_head() {
+        return head.load(std::memory_order_acquire);
     }
 
-    T* get_head() {
-        return head;
+    void push(const T& data) {
+        Node* node = new Node(data);
+        node->next = head;
+        // keep trying to set head
+        while(!head.compare_exchange_weak(node->next,node));
     }
 
-    bool push(T* data) {
-        while(!flag.test_and_set(std::memory_order_seq_cst)) {
-            ;
-        }
-    }
+    Node*
 };
 
 int main() {
