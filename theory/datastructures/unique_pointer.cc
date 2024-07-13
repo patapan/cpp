@@ -1,3 +1,4 @@
+#include <utility>
 
 template <typename T>
 class UniquePointer {
@@ -45,3 +46,15 @@ class UniquePointer {
         return ret;
     }
 };
+
+// Make unique function for creating UniquePointer instances
+template <typename T, typename... Args>
+UniquePointer<T> make_unique(Args&&... args) {
+    return UniquePointer<T>(new T(std::forward<Args>(args)...));
+}
+
+int main() {
+    // Using make_unique to create UniquePointer instance
+    UniquePointer<int> ptr1 = make_unique<int>(42);
+    UniquePointer<int> ptr2 = std::move(ptr1);  // Transfer ownership
+}
