@@ -1,9 +1,9 @@
 // Lockfree stack
+// Lockfree->systemwide progress
+// Waitfree->every thread is making progress
 
 #include <atomic>
 #include <list>
-
-// NOT DONE
 
 template <typename T>
 class Stack {
