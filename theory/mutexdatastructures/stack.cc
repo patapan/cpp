@@ -68,11 +68,14 @@ struct Factory {
 };
 
 int main() {
-    Stack<int> stack;
-    stack.push(2);
-    stack.push(10);
+    Stack<int*> stack;
+    int* two = new int(2);
+    int* ten = new int(10);
+
+    stack.push(two);
+    stack.push(ten);
 
     while (stack.size() > 0) {
-        std::cout << stack.pop() << "\n";
+        std::cout << *stack.pop() << "\n";
     }
 }
