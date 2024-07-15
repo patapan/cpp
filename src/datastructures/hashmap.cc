@@ -10,7 +10,7 @@ class HashMap {
     struct Node {
         std::pair<K,V> data; // each node stores a key value pair
         Node* next;
-        Node(std::pair<K,V> data) : data(data){}
+        Node(std::pair<K,V> data) : data(data), next(nullptr) {}
     };
     Node* buckets[NUM_BUCKETS];
 
@@ -18,29 +18,7 @@ class HashMap {
         return std::hash<K>{}(key) % NUM_BUCKETS;
     }
 
- public:
-    HashMap() {
-        for (int i = 0; i < NUM_BUCKETS; ++i) {
-            buckets[i] = nullptr;
-        }
-    }
-    
-    // Destructor
-    ~HashMap() {
-        // Delete every node
-        for (int i = 0; i < NUM_BUCKETS; i++) {
-            Node *node = buckets[i];
-            while (node) {
-                Node* tmp = node->next;
-                delete node;
-                node = tmp;
-            }
-        }
-    }
-
-    // Copy constructor 
-    // Performs a deep copy.
-    HashMap(const HashMap& other) {
+    void deep_copy(const HashMap& other) {
         for (int i = 0; i < NUM_BUCKETS; i++) {
             if (other.buckets[i] == nullptr) {
                 buckets[i] = nullptr;
@@ -58,20 +36,67 @@ class HashMap {
             }
         }
     }
+    
+    // Move ownership of the nodes from other to this HashMap.
+    void deep_move(HashMap&& other) noexcept {
+        for (int i = 0; i < NUM_BUCKETS; i++) {
+            buckets[i] = other.buckets[i];
+            other.buckets[i] = nullptr;
+        }
+    }
+
+    void release() {
+        // Delete every node
+        for (int i = 0; i < NUM_BUCKETS; i++) {
+            Node *node = buckets[i];
+            while (node) {
+                Node* tmp = node->next;
+                delete node;
+                node = tmp;
+            }
+        }
+    }
+
+ public:
+    HashMap() {
+        for (int i = 0; i < NUM_BUCKETS; ++i) {
+            buckets[i] = nullptr;
+        }
+    }
+    
+    // Destructor
+    ~HashMap() {
+        release();
+    }
+
+    // Copy constructor 
+    // Performs a deep copy.
+    HashMap(const HashMap& other) {
+        deep_copy(other);
+    }
 
     // Copy assignment 
-    HashMap&& operator=(const HashMap& other) {
-        
+    HashMap& operator=(const HashMap& other) {
+        if (this != &other) {
+            // check for self assignment
+            release();
+            deep_copy(other);
+        }
+        return *this;
     }
 
     // Move constructor
     HashMap(HashMap&& other) noexcept {
-
+        deep_move(other);
     }
 
     // Move assignment
-    HashMap&& operator=(HashMap&& other) noexcept {
-
+    HashMap& operator=(HashMap&& other) noexcept {
+        if (this != &other) {
+            release();
+            deep_move(other);
+        }
+        return *this;
     }
 
     // put key value pair into our hashmap
@@ -119,5 +144,8 @@ class HashMap {
 int main() {
     HashMap<int,int> map;
     map.put(1,100);
-    std::cout << map.get(1) << "\n";
+
+    auto map2 = map;
+
+    std::cout << map2.get(1) << "\n";
 }
