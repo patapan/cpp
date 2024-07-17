@@ -1,5 +1,6 @@
 
 #include <list>
+#include <iostream>
 
 /*
 Implements a simple pool allocator with a free list.
@@ -42,8 +43,12 @@ class PoolAllocator {
     }
 
     ~PoolAllocator() {
+        std::cout << "deleting pool wiht size " << CHUNK_SIZE << "\n";
         delete[] static_cast<char*>(memory);
     }
+
+    PoolAllocator(const PoolAllocator& other) = delete;
+    PoolAllocator& operator=(const PoolAllocator& other) = delete;
 };
 
 /*
@@ -52,34 +57,40 @@ We have various pool sizes and fit the data to the most appropriate bucket.
 */
 class MultiPoolAllocator {
  private:
-    std::vector<PoolAllocator> pools;
+    std::vector<std::unique_ptr<PoolAllocator>> pools;
     size_t CHUNK_NUM;
 
     // Get the appropriate pool for this sized chunk.
-    PoolAllocator& get_pool(size_t size) {
-        return *(std::upper_bound(pools.begin(), pools.end(), size, [](size_t size, const PoolAllocator& pool){ return size > pool.CHUNK_SIZE; }));
+    std::unique_ptr<PoolAllocator>& get_pool(size_t size) {
+        auto pool = (std::upper_bound(pools.begin(), pools.end(), size, [](size_t size, const std::unique_ptr<PoolAllocator>& pool){ return size <= pool->CHUNK_SIZE; }));
+        std::cout << "Fetched pool with size: " << (*pool)->CHUNK_SIZE << "\n";
+        return *pool;
     }
 
  public:
     MultiPoolAllocator(std::vector<size_t>& chunk_sizes, size_t CHUNK_NUM_) : CHUNK_NUM(CHUNK_NUM_) {
-        pools.reserve(chunk_sizes.size());
+        // pools.reserve(chunk_sizes.size());
 
         for (size_t chunk_size : chunk_sizes) {
-            pools.push_back(PoolAllocator(chunk_size, CHUNK_NUM));
+            pools.push_back(std::make_unique<PoolAllocator>(chunk_size, CHUNK_NUM));
         }
     }
 
     // Allocate memory in the smallest pool that fits the size.
     void* allocate(size_t size) {
-        PoolAllocator pool = get_pool(size);
-        return pool.allocate();
+        auto& pool = get_pool(size);
+        return pool->allocate();
     }
 
     // Note size must be the original size the user requested, not the pool size.
     void deallocate(void* chunk, size_t size) {
-        PoolAllocator pool = get_pool(size);
-        pool.deallocate(chunk);
+        auto& pool = get_pool(size);
+        pool->deallocate(chunk);
     }
 };
 
-int main(){}
+int main(){
+    std::vector<size_t> pool_sizes = {4,8,16,32};
+    MultiPoolAllocator multipool(pool_sizes,5);
+    multipool.allocate(sizeof(char) * 17);
+}
