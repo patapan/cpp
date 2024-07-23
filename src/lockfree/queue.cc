@@ -49,6 +49,28 @@ class Queue {
             delete node;
         }
     }
+
+    // Delete copy constructor and copy assignment operators 
+    Queue(const Queue& other) = delete;
+    Queue& operator=(const Queue& other) = delete;
+
+    // Move constructors
+    Queue(Queue&& other) noexcept {
+        head.store(other.head.load());
+        other.head.store(nullptr);
+        tail.store(other.tail.load());
+        other.tail.store(nullptr);
+    }
+
+    Queue& operator=(Queue&& other) noexcept {
+        if (this != &other) {
+            ~Queue();
+            head.store(other.head.load());
+            other.head.store(nullptr);
+            tail.store(other.tail.load());
+            other.tail.store(nullptr);
+        }
+    }
 };
 
 int main(){
@@ -57,7 +79,6 @@ int main(){
     Queue<int> q;
     q.push(a);
     q.push(b);
-    std::cout << "here\n";
     std::cout << *(q.pop()) << " " << *(q.pop()) << std::endl;
     std::cout << 
 }
