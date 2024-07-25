@@ -26,24 +26,32 @@ private:
         time_t timestamp;
         size_t filled_volume;
 
-        // Implement comparator for Order
-        bool operator<(const Order& other) const {
-            if (price == other.price) {
-                return timestamp < other.timestamp;
-            }
-            return type == OrderType::ASK ? price < other.price : price > other.price;
-        }
-
     };
 
     std::unordered_map<int, Order> orders;
 
+    struct OrderComparator {
+        const std::unordered_map<int, Order>& orders;
+
+        OrderComparator(const std::unordered_map<int, Order>& orders) : orders(orders) {}
+
+        bool operator()(const int& lhs, const int& rhs) const {
+            const Order& lhs_order = orders.at(lhs);
+            const Order& rhs_order = orders.at(rhs);
+            if (lhs_order.price == rhs_order.price) {
+                return lhs_order.timestamp < rhs_order.timestamp;
+            }
+            return lhs_order.type == Order::OrderType::ASK ? lhs_order.price < rhs_order.price : lhs_order.price > rhs_order.price;
+        }
+    };
+
+
     // Instead of storing the full Order in the bids, we store only the order ID to optimize sorting.
-    std::set<int> bids; // sorted by largest first
-    std::set<int> asks; // sorted by smallest first
+    std::set<int, OrderComparator> bids; // sorted by largest first
+    std::set<int, OrderComparator> asks; // sorted by smallest first
 
 public:
-    OrderBook() {
+    OrderBook() : bids(OrderComparator(orders)), asks(OrderComparator(orders)) {
         // do we need to do anything here...?
     }
 
