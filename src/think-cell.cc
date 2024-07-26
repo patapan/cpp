@@ -23,39 +23,32 @@ public:
         if (!(keyBegin < keyEnd)) return;
 
         auto nextKey = m_map.upper_bound(keyBegin); // fetch the next key in the map.
-        auto prevKey = nextKey--;
 
-        if (prevKey->second == val) return; // We don't need a new key as the previous key handles this value
+        auto prevValue = (nextKey == m_map.begin()) ? m_valBegin : std::prev(nextKey)->second;
+        if (prevValue == val) return; // first value is same as default value. Ignore.
+
+        // if we are at the end (lastkey) we need to make sure we have something recorded to set as teh default
+
         m_map[keyBegin] = val;
-        
+
         if (nextKey != m_map.end() && nextKey->first < keyEnd) {
             // we need to move the old key from it->first to keyEnd.
-            m_map.erase(nextKey->first);
+            m_map.erase(nextKey);
 
             // If the old_key val is different to our new value,
             // add it back into the map.
             if (nextKey->second != val) m_map[keyEnd] = nextKey->second;
         }
-
-        /*
-        - If we have keys already present in the interval, we need to move them
-        - 2 scenarios:
-            1. Something from earlier than keyBegin overlaps into keyBegin interval.
-            2. Something from later than keyEnd start before keyEnd.
-        - If consecutive keys have same value we need to merge them
-
-        Constraints:
-        - Only one operation with running time of amortized complexity O(log N), 
-            should be executed per call to assign, where N is the number of elements in m_map.
-        */
     }
 
 	// look-up of the value associated with key
 	V const& operator[]( K const& key ) const {
 		auto it=m_map.upper_bound(key);
+        
 		if(it==m_map.begin()) {
 			return m_valBegin;
 		} else {
+            if ((std::prev(it))->first == key) std::cout << "Actual key! ";
 			return (--it)->second;
 		}
 	}
@@ -69,10 +62,11 @@ public:
 void test() {
     interval_map<int,char> imap('A');
 
-    imap.assign(1, 5, 'B');
-    imap.assign(3, 6, 'A');
+    // imap.assign(1, 5, 'B');
+    imap.assign(3, 6, 'B');
+    // imap.assign(4, 6, 'A');
 
-    for (int i = -2; i < 8; i++) {
+    for (int i = -2; i < 10; i++) {
         std::cout << "Key: " << i << " Value: " << imap[i] << std::endl;
     }
 }
