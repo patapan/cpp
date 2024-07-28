@@ -17,9 +17,8 @@ class UniquePointer {
         return data;
     }
 
-    // Copy constructor
+    // Delete Copy constructor and Copy Assignment operator
     UniquePointer(const UniquePointer& other) = delete;
-    // Copy assignment operator
     UniquePointer& operator=(const UniquePointer& other) = delete; 
 
     // Move constructor

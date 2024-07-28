@@ -62,7 +62,10 @@
         "memory_resource": "cpp",
         "map": "cpp",
         "type_traits": "cpp",
-        "__memory": "cpp"
+        "__memory": "cpp",
+        "stack": "cpp",
+        "typeindex": "cpp",
+        "stop_token": "cpp"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }
