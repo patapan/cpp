@@ -60,7 +60,9 @@
         "cinttypes": "cpp",
         "iterator": "cpp",
         "memory_resource": "cpp",
-        "map": "cpp"
+        "map": "cpp",
+        "type_traits": "cpp",
+        "__memory": "cpp"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }
