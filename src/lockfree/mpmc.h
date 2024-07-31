@@ -58,13 +58,13 @@ public:
     }
 
     // Keep trying to move the head to the next value. When you suceed, return that data.
-    T pop() {
+    std::optional<T> pop() {
         Node* old_head = head.load(std::memory_order_acquire);
         Node* tail_node = tail.load(std::memory_order_acquire);
 
         while (true) {
             Node* new_head = old_head->next.load(std::memory_order_acquire);
-            if (new_head == nullptr) throw std::runtime_error("Cannot pop empty queue");
+            if (new_head == nullptr) return std::nullopt;
             if (head.compare_exchange_weak(old_head, new_head)) {
                 T data = std::move(old_head->data.value());
                 delete old_head;
@@ -94,22 +94,22 @@ void producer(MpmcQueue<int>& mpmc) {
 
 void consumer(MpmcQueue<int>& mpmc) {
     for (int i = 0; i < 20; i ++) {
-        std::cout << mpmc.pop() << std::endl;
+        // std::cout << mpmc.pop() << std::endl;
     }
 }
 
-int main(){
-    MpmcQueue<int> mpmc;
+// int main(){
+//     MpmcQueue<int> mpmc;
 
-    std::vector<std::jthread> workers;
+//     std::vector<std::jthread> workers;
 
-    for (int i = 0; i < 2; i++) {
-        workers.push_back(std::jthread{producer, std::ref(mpmc)});
-    }
+//     for (int i = 0; i < 2; i++) {
+//         workers.push_back(std::jthread{producer, std::ref(mpmc)});
+//     }
 
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+//     std::this_thread::sleep_for(std::chrono::seconds(1));
 
-    for (int i = 0; i < 1; i++) {
-        workers.push_back(std::jthread(consumer, std::ref(mpmc)));
-    }    
-}
+//     for (int i = 0; i < 1; i++) {
+//         workers.push_back(std::jthread(consumer, std::ref(mpmc)));
+//     }    
+// }
