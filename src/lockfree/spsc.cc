@@ -16,6 +16,14 @@ class  Spsc {
     };
     std::atomic<Node*> head;
     std::atomic<Node*> tail;
+
+    void release() {
+        while (Node* node = head.load(std::memory_order_acquire)) {
+            head.store(node->next, std::memory_order_release);
+            delete node;
+        }
+    }
+
  public:    
      Spsc() {
         // initialize empty Spsc
@@ -43,11 +51,8 @@ class  Spsc {
         return data;
     }
 
-    ~ Spsc() {
-        while (Node* node = head.load(std::memory_order_acquire)) {
-            head.store(node->next, std::memory_order_acquire);
-            delete node;
-        }
+    ~Spsc() {
+        release();
     }
 
     // Delete copy constructor and copy assignment operators 
@@ -62,9 +67,9 @@ class  Spsc {
         other.tail.store(nullptr);
     }
 
-     Spsc& operator=( Spsc&& other) noexcept {
+     Spsc& operator=(Spsc&& other) noexcept {
         if (this != &other) {
-            ~ Spsc();
+            release();
             head.store(other.head.load());
             other.head.store(nullptr);
             tail.store(other.tail.load());
@@ -76,9 +81,8 @@ class  Spsc {
 int main(){
     int a = 1;
     int b = 2;
-     Spsc<int> q;
+    Spsc<int> q;
     q.push(a);
     q.push(b);
     std::cout << *(q.pop()) << " " << *(q.pop()) << std::endl;
-    std::cout << 
 }

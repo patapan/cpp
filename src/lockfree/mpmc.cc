@@ -11,6 +11,7 @@ The idea for popping / adding is that
 #include <optional>
 #include <thread>
 #include <iostream>
+#include <chrono>
 
 template <typename T>
 class MpmcQueue {
@@ -84,14 +85,15 @@ public:
     MpmcQueue& operator=(MpmcQueue&& other) noexcept = delete;
 };
 
-void producer(int increment, MpmcQueue<int>& mpmc) {
+void producer(MpmcQueue<int>& mpmc) {
     for (int i = 0; i < 10; i += 1) {
+        std::cout << "Pushing " << i << " to the queue" << std::endl;
         mpmc.push(i);
     }
 }
 
-void consumer(int i, MpmcQueue<int>& mpmc) {
-    for (int i = 0; i < 10; i ++) {
+void consumer(MpmcQueue<int>& mpmc) {
+    for (int i = 0; i < 20; i ++) {
         std::cout << mpmc.pop() << std::endl;
     }
 }
@@ -102,10 +104,12 @@ int main(){
     std::vector<std::jthread> workers;
 
     for (int i = 0; i < 2; i++) {
-        workers.push_back(std::jthread(producer, i, std::ref(mpmc)));
+        workers.push_back(std::jthread{producer, std::ref(mpmc)});
     }
 
-    for (int i = 0; i < 2; i++) {
-        workers.push_back(std::jthread(consumer, i, std::ref(mpmc)));
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+
+    for (int i = 0; i < 1; i++) {
+        workers.push_back(std::jthread(consumer, std::ref(mpmc)));
     }    
 }
