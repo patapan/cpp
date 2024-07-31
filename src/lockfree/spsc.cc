@@ -3,11 +3,11 @@
 #include <memory>
 #include <iostream>
 
-// single producer, single consumer queue
+// Lock free single producer, single consumer  Spsc
 // Not wait free as we dynamically allocate memory which can block.
 
 template <typename T> 
-class Queue {
+class  Spsc {
  private:
     struct Node {
         std::shared_ptr<T> data;
@@ -17,8 +17,8 @@ class Queue {
     std::atomic<Node*> head;
     std::atomic<Node*> tail;
  public:    
-    Queue() {
-        // initialize empty queue
+     Spsc() {
+        // initialize empty Spsc
         head.store(new Node(), std::memory_order_relaxed);
         tail.store(head.load(std::memory_order_relaxed));
     }
@@ -43,7 +43,7 @@ class Queue {
         return data;
     }
 
-    ~Queue() {
+    ~ Spsc() {
         while (Node* node = head.load(std::memory_order_acquire)) {
             head.store(node->next, std::memory_order_acquire);
             delete node;
@@ -51,20 +51,20 @@ class Queue {
     }
 
     // Delete copy constructor and copy assignment operators 
-    Queue(const Queue& other) = delete;
-    Queue& operator=(const Queue& other) = delete;
+     Spsc(const  Spsc& other) = delete;
+     Spsc& operator=(const  Spsc& other) = delete;
 
     // Move constructors
-    Queue(Queue&& other) noexcept {
+     Spsc( Spsc&& other) noexcept {
         head.store(other.head.load());
         other.head.store(nullptr);
         tail.store(other.tail.load());
         other.tail.store(nullptr);
     }
 
-    Queue& operator=(Queue&& other) noexcept {
+     Spsc& operator=( Spsc&& other) noexcept {
         if (this != &other) {
-            ~Queue();
+            ~ Spsc();
             head.store(other.head.load());
             other.head.store(nullptr);
             tail.store(other.tail.load());
@@ -76,7 +76,7 @@ class Queue {
 int main(){
     int a = 1;
     int b = 2;
-    Queue<int> q;
+     Spsc<int> q;
     q.push(a);
     q.push(b);
     std::cout << *(q.pop()) << " " << *(q.pop()) << std::endl;

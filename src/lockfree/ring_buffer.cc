@@ -12,11 +12,22 @@ Benefits of a ringbuffer
 
 constexpr size_t BUFFER_SIZE = 1024; // 1024 items
 
-template<typename T, size_t Size>
+template<typename T>
 class RingBuffer {
+private:
+    size_t increment(size_t idx) const {
+        return (idx + 1) % BUFFER_SIZE;
+    }
+
+    std::atomic<size_t> tail;
+    T buffer[BUFFER_SIZE];
+    std::atomic<size_t> head;
+
 public:
     RingBuffer() : tail(0), head(0) {}
-    virtual ~RingBuffer() {}
+    ~RingBuffer() {
+        delete buffer;
+    }
 
     // push to tail
     bool push(const T& item) {
@@ -51,15 +62,6 @@ public:
         const auto next_tail = increment(tail.load());
         return (next_tail == head.load());
     }
-
-private:
-    size_t increment(size_t idx) const {
-        return (idx + 1) % BUFFER_SIZE;
-    }
-
-    std::atomic<size_t> tail;
-    T buffer[BUFFER_SIZE];
-    std::atomic<size_t> head;
 };
 
 int main(){}
