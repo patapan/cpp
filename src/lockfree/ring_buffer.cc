@@ -10,21 +10,21 @@ Benefits of a ringbuffer
 2. 
 */
 
-template<typename T, size_t Size>
-class CircularFifo {
-public:
-    enum { Capacity = Size+1 };
+constexpr size_t BUFFER_SIZE = 1024; // 1024 items
 
-    CircularFifo() : _tail(0), _head(0) {}
-    virtual ~CircularFifo() {}
+template<typename T, size_t Size>
+class RingBuffer {
+public:
+    RingBuffer() : tail(0), head(0) {}
+    virtual ~RingBuffer() {}
 
     // push to tail
     bool push(const T& item) {
-        auto current_tail = _tail.load(std::memory_order_relaxed);
+        auto current_tail = tail.load(std::memory_order_relaxed);
         auto next_tail = increment(current_tail);
-        if(next_tail != _head.load(std::memory_order_acquire)) {
-            _array[current_tail] = item;
-            _tail.store(next_tail, std::memory_order_release);
+        if(next_tail != head.load(std::memory_order_acquire)) {
+            buffer[current_tail] = item;
+            tail.store(next_tail, std::memory_order_release);
             return true;
         }
         return false; // full queue
@@ -32,38 +32,34 @@ public:
 
     // pop from head into item.
     bool pop(T& item) {
-        const auto current_head = _head.load(std::memory_order_relaxed);
-        if(current_head == _tail.load(std::memory_order_acquire))
+        const auto current_head = head.load(std::memory_order_relaxed);
+        if(current_head == tail.load(std::memory_order_acquire))
             return false; // empty queue
 
-        item = _array[current_head];
-        _head.store(increment(current_head), std::memory_order_release);
+        item = buffer[current_head];
+        head.store(increment(current_head), std::memory_order_release);
         return true;
     }
 
     // Empty if head == tail.
     bool wasEmpty() const {
-        return (_head.load() == _tail.load());
+        return (head.load() == tail.load());
     }
 
     // Full if the next tail is the head.
     bool wasFull() const {
-        const auto next_tail = increment(_tail.load());
-        return (next_tail == _head.load());
-    }
-
-    bool isLockFree() const {
-        return (_tail.is_lock_free() && _head.is_lock_free());
+        const auto next_tail = increment(tail.load());
+        return (next_tail == head.load());
     }
 
 private:
     size_t increment(size_t idx) const {
-        return (idx + 1) % Capacity;
+        return (idx + 1) % BUFFER_SIZE;
     }
 
-    std::atomic<size_t> _tail;
-    T _array[Capacity];
-    std::atomic<size_t> _head;
+    std::atomic<size_t> tail;
+    T buffer[BUFFER_SIZE];
+    std::atomic<size_t> head;
 };
 
 int main(){}

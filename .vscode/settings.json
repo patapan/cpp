@@ -65,7 +65,8 @@
         "__memory": "cpp",
         "stack": "cpp",
         "typeindex": "cpp",
-        "stop_token": "cpp"
+        "stop_token": "cpp",
+        "utility": "cpp"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }

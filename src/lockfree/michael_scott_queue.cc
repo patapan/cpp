@@ -2,6 +2,7 @@
 #include <memory>
 
 // Multi producer multi consumer lock free queue
+// Michael Scott Queue
 
 template <typename T>
 class MichaelScottQueue {
