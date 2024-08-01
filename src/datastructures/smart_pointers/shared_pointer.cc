@@ -13,7 +13,7 @@ class SharedPointer {
 
     // release the pointer
     void release() noexcept {
-        if (counter && counter->fetch_sub(1) == 1) {
+        if (counter && counter->fetch_sub(1, std::memory_order_acq_rel) == 1) {
             delete data;
             delete counter;
         }
@@ -22,8 +22,8 @@ class SharedPointer {
  public:
     // The issue with this constructor is that we don't know how many times this
     // pointer has been copied already.
-    explicit SharedPointer(T* data = nullptr) : data(data) {
-        counter = new std::atomic<int>(1);
+    explicit SharedPointer(T* data_ = nullptr) : data(data_), counter(nullptr) {
+        if (data_) counter = new std::atomic<int>(1);
     }
 
     ~SharedPointer() {
@@ -31,11 +31,9 @@ class SharedPointer {
     }
 
     // copy constructor 
-    SharedPointer(const SharedPointer& other) {
-        data = other.data;
-        counter = other.counter;
+    SharedPointer(const SharedPointer& other) : data(other.data), counter(other.counter) {
         if (counter) {
-            counter->fetch_add(1, std::memory_order_relaxed);
+            counter->fetch_add(1, std::memory_order_acq_rel);
         }
     }
 
@@ -45,7 +43,7 @@ class SharedPointer {
             release(); // release existing resources associated with this obj
             counter = other.counter;
             data = other.data;
-            other.counter->fetch_add(1, std::memory_order_relaxed);
+            if (counter) counter->fetch_add(1, std::memory_order_acq_rel);
         }
         return *this;
     }
@@ -75,8 +73,8 @@ class SharedPointer {
         return *data;
     }
 
-    T& operator->() noexcept {
-        return *data;
+    T* operator->() noexcept {
+        return data;
     }
 };
 
@@ -94,7 +92,7 @@ struct Factory {
 };
 
 void run(int thread_id, SharedPointer<Factory> p) {
-    std::cout << (*p).name << "\n";
+    std::cout << p->name << "\n";
 }
 
 int main() {
