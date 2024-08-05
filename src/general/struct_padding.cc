@@ -24,8 +24,23 @@ struct Bar {
     // 3 byte padding inserted here to ensure struct is multiple of largest alignment requirement.
 };
 
+// Size 6 bytes (forced to pack struct)
+#pragma pack(1)
+struct NoPadding {
+    char c; // 1
+    int x;  // 4
+    char d; // 1
+};
+
+struct NoPadding2 {
+    char c; // 1
+    int x;  // 4
+    char d; // 1
+}__attribute__((__packed__));
 
 int main(){
     std::cout << sizeof(Foo) << std::endl;
     std::cout << sizeof(Bar) << std::endl;
+    std::cout << sizeof(NoPadding) << std::endl;
+    std::cout << sizeof(NoPadding2) << std::endl;
 }
