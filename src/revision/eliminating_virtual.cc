@@ -1,5 +1,7 @@
 #include <memory>
 
+// Lecture notes
+
 // 1. Virtual function impl
 struct FooInterface {
     [[nodiscard]] virtual auto func() const -> int = 0;
