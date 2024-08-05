@@ -1,27 +1,56 @@
-
 /*
-Move casts an L value ref to an R value ref
+Move is a casting operator which casts an L-value to an X-value (expiring ref)
+
 */
 
-// partial specializtion for L value
+#include <iostream>
+
+// Empty primary case
 template <typename T>
-struct remove_ref<T&> {
-    constexpr static typedef type = T;
+struct remove_reference;
+
+// Implement remove_reference for L refs
+template <typename T>
+struct remove_reference<T&> {
+    using type = T;
 };
 
-// partial specialization for R value
+// Implement remove_reference for R refs
 template <typename T>
-struct remove_ref<T&> {
-    constexpr static typedef type = T;
+struct remove_reference<T&&> {
+    using type = T;
 };
 
-// full specialization
+// Implement std::move
 template <typename T>
-struct remove_ref {
-    using typedef 
+remove_reference<T>::type&& move(T&& ref) {
+    return static_cast<remove_reference<T>::type&&>(ref);
+}
+
+// Now let's see it in action
+
+struct Foo {
+    std::string name;
+
+    Foo(std::string name) : name(name){}
+
+    // move constructor
+    Foo(Foo&& other) noexcept {
+        name = other.name;
+        other.name = "";
+    }
+
+    friend std::ostream& operator<<(std::ostream& stream, const Foo& foo) {
+        stream << foo.name;
+        return stream;
+    }
 };
 
-template <typename T>
-remove_ref<T>&& ref std::move(T&& ref) noexcept {
-    return static_cast<>(ref);
+int main() {
+    Foo x("500");
+
+    Foo y = move(x);
+
+    std::cout << x << std::endl;
+    std::cout << y << std::endl;
 }
