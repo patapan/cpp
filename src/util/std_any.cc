@@ -47,12 +47,7 @@ private:
 public:
     Any() : typeIndex(typeid(void)) {}
 
-    Any(const Any& other) : ptr(other.clone()), typeIndex(other.typeIndex) {}
-
-    Any(Any&& other) noexcept : ptr(std::move(other.ptr)), typeIndex(other.typeIndex) {
-        other.typeIndex = typeid(void); // Resets the moved-from object's typeIndex
-    }
-
+    // Constructor
     template<typename T>
     Any(const T& value) : ptr(new Derived<T>(value)), typeIndex(typeid(T)) {}
 
@@ -73,11 +68,12 @@ public:
         return *this;
     }
 
-    template<typename T>
-    Any& operator=(const T& value) {
-        ptr = std::make_unique<Derived<T>>(value);
-        typeIndex = typeid(T);
-        return *this;
+    // Copy constructor
+    Any(const Any& other) : ptr(other.clone()), typeIndex(other.typeIndex) {}
+
+    // Move constructor
+    Any(Any&& other) noexcept : ptr(std::move(other.ptr)), typeIndex(other.typeIndex) {
+        other.typeIndex = typeid(void); // Resets the moved-from object's typeIndex
     }
 
     bool empty() const {

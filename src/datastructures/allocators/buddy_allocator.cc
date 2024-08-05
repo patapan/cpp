@@ -3,6 +3,12 @@
 #include <cmath>
 #include <cassert>
 
+/*
+The BuddyAllocator is a memory allocation algorithm used in the Linux Kernel. It retains pools of size 2^N
+and seeks to find the smallest pool which fits the requested data. If it can't find any free spots in the appropraite 
+pool size it splits larger blocks until it can.
+*/
+
 class BuddyAllocator {
 private:
     static const int MAX_MEM = 1024; // Maximum memory size in bytes
