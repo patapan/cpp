@@ -1,0 +1,487 @@
+#### General
+- `stack memory` ideal for short lifetime. Memory automatically freed when out of scope
+	- `small but fast` (8 megabytes?)
+	- `size must be known at compile time`
+	- every thread gets its own stack
+- `heap` better for persisting data beyond scope in which it was allocated 
+	- `int* dynamicArray = new int[n]; // storing array on heap`
+	- slower 
+	- heap is shared amongst threads in a process
+- Construction
+	- `Default initialization`
+		- Local non-static vars: undefined
+		- For class types no args constructor called (if exists else undefined)
+	- `Value initialization`
+		- Global or static or Explicit Value Initialization with `()` or `{}`
+		- Built-in types Initialized to 0 / `nullptr`
+		- For class types no args constructor called (if exists else undefined)
+- Memory allocation
+	- `malloc` - allocates size raw bytes of memory (`void* malloc(size_t size);`)
+		- in cpp you could just use `new char[100]` for same effect 
+			- must call `free`
+	- `calloc` - `malloc()` + initialize to 0
+	- `new` - allocates memory and calls the constructor to initialize the object. Type safe.
+		- must call `delete`
+	- `memset(void *mem, int c, size_t n)` - set n bytes of mem to c
+
+#### Keywords
+- `constexpr` means the var / function is available at compile time (but can also be used at run time)
+- `consteval` always evaluated at compile time (if invoked in runtime context it will produce a compiler error)
+- `inline` hints at compiler to embed the function's body where the function is called + also can be used to resolve ODR by allowing multiple definitions (assuming they are identical)
+	- it allows you to define function in header file
+- `static` when used in a function / class context is means all refs to it share the same data. In global context it limits scope to containing file (reduces name conflicts + slight improvement at access time) (used to impl singleton)
+- `noexcept` specifies that a function does not throw exceptions.
+- `new` allocates memory dynamically on the heap (in RAM) (slow operation)
+- `delete` deallocate heap memory  (use `delete[]` when deallocating an array)
+- `extern` used to declare a var or func from another translation unit
+- `auto` type inference introduced in `C++11`
+- `thread_local` specifies that a var is thread-specific, meaning each thread has its own instance of the variable
+- `explicit` is used to prevent `implicit` conversions and copy-initialization
+	- `implicit conversion: Example ex = {42}`
+- `decltype(x)` fetches the type of the variable x
+
+#### STL Data structures
+- To get size of array: `int size = sizeof(arr) / sizeof(arr[0]);`
+- `std::vector` always a contiguous slice of memory + typically doubles in size whenever it runs out of memory
+- **Heaps (red black trees)**
+	- `std::priority_queue<int> maxHeap`
+	- `std::priority_queue<int, std::vector<int>, std::greater<int>> minHeap;`
+- `std::map` ordered map (red black tree) O(log N) insertion, deletion, lookup
+- `std::unordered_map` typical hashmap with O(1) insertion, deletion, lookup
+	- Hash functions
+		- `Separate chaining` - use linkedlist at each bucket
+		- `Open addressing` - linear probing, quadratic etc
+- `std::set` ordered set
+- `std::unordered_set` typical hashset
+- `std::list` doubly linked list
+	- `list.front()` `list.back()` `list.rbegin()` 
+- `std::deque` double ended queue
+
+#### STL Algorithms
+- `std::lower_bound(vec.begin(), vec.end(), i)` fetches the first index larger than i
+	- uses binary search 
+	- also `std::binary_search` returns `bool` && `std::upper_bound`
+- `std::sort(vec.begin(), vec.end())`
+	- MergeSort - divide & conquer
+		- recursively sort halves and merge result
+- `std::memcopy(dst,src,sizeof(T) * size)` copies data from src to dst
+- `std::transform` applies an operation over a range, producing results in another range
+	- `transform(input1_begin,input1_end,output_begin,unary_op);`
+	- `transform(input1_begin, input1_end, input2_begin, output_begin, binary_op);`
+- `std::reduce` applies an operation over a range, producing a single result
+	- `std::reduce(v.begin(), v.end()); // defaults to std::plus`
+#### Smart pointers
+- `std::unique_ptr<int> p = std::make_unique<int>(10);` - cannot copy. deallocates when goes out of scope
+	- `std::make_unique<T>()` constructs a new object and returns unique pointer to it
+- #### Shared pointers
+	- `std::shared_ptr<int> p1 = std::make_shared<int>(20);`
+	-  `std::shared_ptr<int> p2 = p1; // Both now own the resource.`
+	- `std::weak_ptr<int> wp = p; // Create a weak_ptr to the shared resource`
+		- Doesn't count as a ref. Must convert to `shared_ptr` with `lock()` to ensure it exists
+#### Move semantics - Transfer ownership of resources
+- `L-value` (left side of assignment), have memory addresses
+	- `Class& var` ref to L-value
+- `R-value` (right side of assignment), does not persist beyond the expression that uses it
+	- `Class&& var` ref to R-value
+	- There are two types of R values
+		- `prvalues` - Pure r values do not have any memory location
+		- `xvalues` - Expiring r values have memory, but it's expiring
+			- E.g. the result of `std::move()` or a function returning an r value
+- reference collapsing rules - how we have `universal ref &&` for perfect forwarding
+- `std::move` casts L-value to R-value for local var returns
+- `std::forward` ("perfect forwarding") is used in template programming to pass arguments to another function exactly as they were passed to the forwarding function, preserving their value categories (lvalue or rvalue)
+	- Typically used in wrapper functions or factory functions
+	- E.g. maybe you need to cleanup L-value resources
+	- Added in C++11
+#### The Rule of Five
+- `copy constructor` initializes object using another object of the same class.
+	- **`MyClass(const MyClass &other)`**
+	- `MyClass obj1; MyClass obj2 = obj1; // Calls copy constructor`
+	- E.g. when passing arg by value
+- `copy assignment` performs a deep copy of an object
+	- **`MyClass& operator=(const MyClass& other)`**
+	- `MyClass obj1; MyClass obj2; obj2 = obj1; // Calls copy assignment`
+- `move constructor` initializes an object by transferring resources from an R-value object.
+	- **`MyClass(MyClass &&other) noexcept`**
+	- `MyClass obj1 = createTemporaryObject(); // Calls move constructor`
+- `move assignment` takes ownership of resource of another object (leaves source obj in valid but unspecified state)
+	- **`MyClass& operator=(MyClass&& other) noexcept`**
+	- `MyClass obj1; obj1 = createTemporaryObject(); // Calls move assignment`
+- Destructor cleans up resources when object is destroyed
+	- `~MyClass()`
+- `delete` prevents a constructor from being called
+	- `MyClass(const MyClass &other) = delete;`
+- Use assignment when objects are already constructed
+- **Copies take L-values, Moves take in R-values**
+- **Defaults to shallow copies. We override to handle deep copies.**
+
+#### Virtual functions
+- runtime polymorphism
+- use `virtual` on base function and `override` on child
+-  `vtable` = virtual table
+	- array of function pointers
+	- each class that has virtual functions has its own `vtable`
+	- `vtable` lookups are slow and should be minimised
+		- use `final` in child class which means it cannot be inherited
+		- static compile time polymorphism
+		- use `inline` (but doesn't guarantee inline)
+	- Virtual dispatch = vtable lookup
+- **When should you use a virtual destructor?**
+	- If you have a `virtual` function you probably need a virtual `~Class() = default;`
+#### Templates & Metaprogramming
+- usually *defined* in header (no `inline` needed)
+- `std::conditional<bool,Type1,Type2>::type` returns Type1 or Type2 depending on bool
+- `SFINAE` - If no type returned, silently discard
+	- Default `SFINAE` case must have `typename Enable = void`
+	- `struct Cond<std::enable_if_t<(N<0)>>` -- conditionally define a type
+- use `::type` and `::value`
+	- `constexpr static bool value`
+- Specialization types
+	- `Primary`: regular templating 
+		- `template<typename First> struct helper{}`
+	- `Full specialization` (used as base case where all types are set): 
+		- `template<> struct helper<int> {}`
+	- `Partial Specialization` (a specialized implementation for subset of arguments) 
+		- `template<typename Key> struct helper<Key>{}`
+- Variadic templates - can accept any number of args
+	- `template <typename...Args>`
+	- `void run(Args...args){}`
+- CTAD - Class template arg deduction (when constructing an arg deduce type)
+
+#### Header files
+- templates need to be defined in header file if used elsewhere (implicitly inline)
+- To define regular functions in header, use `inline` keyword
+	- This tells linker to ignore ODR issues as long as definition is the same across translation units
+- `One Definition Rule (ODR)` - Only 1 definition for a function is allowed across all translation units for functions exposed to external linkage
+### Locked Concurrency
+- `thread` vs `process`
+	- threads share the same resources (like address space on heap)
+	- processes have their own dedicated memory space (address space)
+		- a process = a running program which can have multiple threads
+	- `coroutine` - function that can be suspended as needed without overhead of syscalls to kernel
+		- more lightweight than thread (no kernel involvement)
+- `std::jthread t{my_func,arg1,arg2};` - introduced in C++20
+	- runs `my_func(stop_token,arg1,arg2)` on new thread
+	- use `std::ref` to pass in ref& args (but not thread safe - dangling refs)
+	- movable not copyable
+	- automatic resource management 
+		- automatically invokes `request_stop()` when it goes out of scope
+	- cooperative thread cancellation
+		- `std::jthread` will automatically generate a `stop_token` if your thread function has one as it's first arg
+		- `std::stop_token` and `std::stop_source`
+		-  **`source.request_stop()`**
+		- must check **`token.stop_requested()`** and exit gracefully
+	- only use `std::thread` if you have no other choice
+- `thread pool` (`boost::asio`) reduces expensive overhead of launching threads by re-using already running ones
+- `std::latch` & `std::barrier` allow threads to `wait()` until increment down to 0
+	- `std::barrier<task_type> x{count, task}` is reusable + optional completion function
+ - `std::async(std::launch::async,func,arg1,arg2)` starts a new thread and returns value via `std::future` which you can `f.get()`
+	 - `std::promise` - explicitly set a value (but prefer `std::async`)
+- `std::mutex` & `std::scoped_lock` 
+	- `Deadlock` = when you lock 2 mutexs in different orders across 2 threads
+	- `lock_guard` - most basic lock. Locks on init, unlocks when goes out of scope
+		- can't unlock before it goes out of scope
+	- `std::scoped_lock locks(m1,m2)` - use when more than 1 mutex 
+		- automatically unlocks when it goes out of scope
+		- can't unlock before it goes out of scope
+	- `std::unique_lock` and `std::condition_variable` optimizes waiting
+		- use it when you have 2 threads that are both trying to write to shared data
+		- while waiting unlocks the mutex so the other thread can process the data
+		- `cv.wait(lock, []{return ready; });`
+		- `cv.notify_all()` to notify other threads
+	- `Futex` = fast user space mutex
+		- In hot path (no contention) no context switching to kernel space required!
+- `std::coroutine` allows you to suspend thread and resume later
+- `semaphore` = a counter that multiple threads have access to
+
+### Lock Free Concurrency
+- `Blocking` - if threads can be prevented from progress if a different thread is suspended
+	- `Non-blocking` - if a thread goes to sleep, it doesn't impact any other threads doing their thing
+- `lock free` = **system wide progress** - some thread is always making progress
+- `wait free` = **per thread progress** - operations guaranteed to complete in finite time no matter what other thread is doing
+- Atomic operations are guaranteed to execute as a single transaction
+	- No other threads can access it in an intermediary state
+	- Must wait for cache line access!
+- `std::atomic<int> x(0)`
+	- sequentially consistent by default (most strict)
+	- cannot be copied to avoid race conditions
+	- T must be trivially copyable and bitwise comparable unless it is `std::shared_ptr`
+	- `atomic.load()` fetches the value;
+	- `atomic.store()` sets new value
+	- `z = x.exchange(y) // z = x; x = y;`
+	- `atomic.fetch_add(X)`  increments by X and returns old val `fetch_sub()`
+	- **`atomic.compare_exchange_strong(expected, desired) -> bool`**
+		- compare var with expected, setting to desired if true and returning true if set
+	- `while(!atomic.compare_exchange_weak(expected, desired))` faster, prefer if using in loop
+		- If comparison fails, `expected` is updated to new `atomic` value by compiler automatically
+- `std::atomic_flag` - Guaranteed lock free on all architectures.
+	- can't read the value without writing.
+	- `flag.test_and_set(std::memory_order_acquire)` 
+	- `flag.clear(std::memory_order_release);`
+- `std::atomic<bool>`
+- #### Lock free Data structures
+	- `ABA problem` - Thread 1 reads, Thread 2 changes then changes back, Thread 1 reads again and thinks nothing happened 
+		- The illusion of data permanence 
+	- `atomic<*node>`
+	- `False sharing` - Having different data used by 2 threads on same cacheline
+		- Use `std::hardware_destructive_interference_size` to avoid this
+- #### Types of waiting
+- `blocking` is when a thread is suspended while waiting
+	- resources entirely renounced
+- `yield` - thread stops running but remains ready to execute as needed
+- `Busy-Waiting` (e.g. `spinlock`) is when a thread is constantly checking a condition without sleeping. Leads to high CPU usage.
+- `race condition` = when 2 threads are accessing data and 1 of them is writing
+- `Acquire and release` semantics - enforce memory ordering constraints 
+	- **Things can move into the critical zone, but not out**
+	- `atomic.load()` - acquire
+	- `atomic.store()` - release
+	- CPU reorders instructions to optimize execution
+	- `std::memory_order_acquire` - for atomic loads / when acquiring the lock
+		- Ensures that subsequent memory operations (reads and writes) cannot be reordered before the acquire operation
+		- **Nothing that was after that operation can move before it**
+			- You want to read the most up to date version of that data 
+	- `std::memory_order_release` - for atomic stores / when releasing the lock
+		- Ensures all reads & writes before the `release` operation cannot be moved after it
+		- Nothing that was before the barrier can move after it
+			- You want everyone to see the most up to date version of that data
+	- `std::memory_order_acq_rel` - enforces both acquire & release ordering
+	- `std::memory_order_seq_cst` - Default
+		- **Sequential consistency** = instructions are executed in the order defined in source code
+	- `std::memory_order_relaxed` - no memory ordering constraint (e.g. good for counter)
+#### Networking and I/O
+- ##### To read / write from a file
+	- `std::ifstream` for reading, `std::ofstream` for writing
+	- `getline(stream,string)` to read with default whitespace delimiter 
+	- `stream >> number` for ingesting stream as number
+- `std::istringstream` - To read string as stream
+	- `std::ostringstream` - To write to string then do `var.str()`
+- `file descriptor` - fundamental point of I/O into a C++ program
+- `boost::asio` for async calls
+- TCP - handshake with guaranteed delivery
+	- SYN, SYNACK, ACK (synchronize, acknowledge)
+- UDP - faster but packet loss
+- `epoll` linux sys call -wait for multiple FD (e.g. sockets, pipes, or files) and react
+	- Good for parallel socket processing
+##### What's the process of opening a socket in a process?
+- sys-call kernel with `socket()` to request a socket, returns a FD
+- If you are a server, you then need to `bind()` to a IP address + port
+- call `connect()` with a `sockaddr_in` struct
+- write with `send(sock, request, strlen(request), 0)` 
+- read with `bytes_received = recv(sock, response, sizeof(response) - 1, 0)`
+- `socket` endpoints for sending and receiving data across network or processes on same host
+	- Non-blocking sockets `NON_BLOCK`
+		- Instead of blocking while waiting for data, it just tells you there is no data
+	- If you try to write to a socket while the buffer is full, that call would block
+	- `#include <sys/socket.h>`
+	- `client_fd = socket(AF_INET, SOCK_STREAM, 0);`
+		- `AF_INET` address family internet
+		- `SOCK_STREAM` socket type which is TCP stream
+	- How can you maximize performance out of a socket?
+		- use `async` non-blocking sockets
+		- `TCP_NODELAY` - packets sent as fast as possible instead of accumulating into bigger ones
+		- reduce socket buffer size - data is sent more often but more packets to process
+		- reuse open ports to reduce overhead of new ones
+		- bind network process to specific CPU to reduce context switching / improve cache
+- `pipe` transfer data on the same machine 
+	- use file descriptors for communication
+	- `anon pipes` and `named pipes`
+	- `#include <sys/types.h>`
+- `wireshark` and `tshark` network packet analyzer
+### Compiler
+- `RVO` - return value optimization (no copy for local vars)
+	- Not an optimization but a rule in the standard
+	- `NRVO` - Named return value optimization
+- `translation unit` is the basic unit of compilation
+	- each unit is compiled separately and then linked together at the end
+	- `internal` and `external` linkage
+#### Operating System / Linux
+- `Kernel` - main process of OS which manages system resources
+- `Kernel space` - The memory reserved for the kernel
+- `User space` - Part of the memory the user has access to (user processes run)
+-  **What modifications would you make to the kernel to tune it for low latency?**
+	- Isolate single core to avoid context switching `isolcpus`
+	- `setting CPU affinity` bind process to isolated core (`taskset`)
+	- Real-Time Kernel patch `PREEMPT_RT`  to make it fully preemptible + define priority for your important events
+		- This lets the kernel interrupt running tasks to switch to more important thing vs in normal mode a task runs to completion
+			- No preemption (e.g. on servers) = tasks run to completion
+				- this minimizes context switching
+	- Reduce network buffer sizes
+	- Increase kernel timer frequency
+- ##### **Scheduler Algorithms**
+	- First come first serve
+	- `Completely fair scheduler `- linux default
+		- all threads get equal priority
+	- `Priority scheduling` - jobs are assigned priority
+		- preemptive mode enable this
+		- determined by `niceness` score
+	- `Round robin` - everyone is given a time slice, if you miss yours bad luck
+		- high context switching
+- `starvation` when a thread is not given the resources it needs
+- What happens when you invoke a new process? 
+	1. `forks()` from running process creating duplicate
+	2. `exec()` initiates new process image & allocates new memory 
+		- memory allocated with `mmap()`
+			- if no free pages, evict via `LRU`
+	3.  wait to get scheduled...
+	4. cache is flushed out and replaced with relevant data (context switch)
+	5. potential swapping of page tables on memory read
+- `NUMA` - Non uniform memory access
+	- Put data closer to the core that is actually using it
+#### Memory Management & Virtual Memory
+- ##### Virtual Memory
+- `virtual memory` creates the abstraction of a contiguous block of memory, when the real memory may be split up - can use hard drive as additional memory
+	- `page_tables` map virtual to physical address mapping
+		- `x86` has 4 levels of page tables
+			- Address split into several parts, each corresponding to different level of table hierarchy
+			- Each entry in the previous level points to an address in the next level
+			- Lowest table points to the physical frame address
+		- multiple layers to reduce overhead 
+		- Each process has its own set of page tables
+		- `page offset` tells you the specific byte in the page you want
+	- Types of pages
+		- `Clean` - page in memory is identical to on disk - cheap to evict
+			- E.g. Executables, libraries
+		- `Dirty` - page has been modified since being paged into memory
+		- `Anonymous` - Has no corresponding file on disk page
+			- E.g. Dynamic heap allocated & stack memory
+			- Must be swapped out to swap space
+	- `Translation look aside buffer (TLB)` caches page table entries
+		- `TLB` is a buffer inside each CPU
+		- `Global pages` are not evicted during a flush
+		- `TLB flush` - clears entries in buffer that are invalidated by page table updates or context switching
+	- `Demand paging` - extend hard drive resources to be used as RAM
+		- `Lazy loading` - only load in specific parts when you need them
+		- `page fault` = when a program requests memory that is not on physical RAM
+			- Minor (soft) page fault - can be fetched from other location in memory
+			- Hard page fault must be swapped from disk
+		- `swap space` - portion of HD used as RAM
+	- `page` = blocks of contiguous virtual memory, `frame` = block of physical memory (1-1)
+	- uses `LRU cache` policy to evict pages
+		- 2 lists: `active` and `inactive` 
+		- `MGLRU` - Multiple generations of caching 
+			- Useful when something was previously used a lot, but not right now though we don't want to evict it
+	- `mmap()` - memory map a file into memory
+		- access files on disk directly through the system’s virtual memory management
+	- Huge pages
+		- Improves TLB hit rates (if page is big more likely something we need is in it)
+		- directly invoke `mmap()` with huge pages `MAP_HUGETLB` + set in kernel
+			- `16mb` is a huge page. regular is like `2kb`
+				- note huge pages may cause memory fragmentation
+		- **When data crosses a page boundary it will probably no longer be contiguous**
+##### What happens when you call `new` in a C++ program in Linux?
+1. Process calls `new` 
+2. This invokes associated memory allocator (probably `malloc`)
+3. checks `freelist` and sees if we can use already allocated memory to fulfill request
+4. If not, allocators sys-calls the kernel to fetch new memory, either via `brk` / `sbrk` to increase heap, or `mmap()` which memory maps a new segment of memory into the processes address space 
+5. If allocator increases heap size and it crosses a page boundary, when we lazily fetch this memory, the kernel checks if the new page needs to be mapped to physical memory, if it hasn't this is a page fault
+
+- ##### **Memory Allocation Strategies**
+	- `malloc` uses **`free lists`** - rather than requesting new memory, we use memory we already allocated for this process
+		- can cause fragmentation
+	- `custom allocators` optimize memory alignment & minimize hot path memory allocation
+		- `monotonic allocator` - do not deallocate until entire memory full
+			- fast contiguous allocation without deallocation (good for tmp)
+		- `global allocators` have access to entire memory
+			- `tcmalloc` - Google's Thread-Caching Malloc
+				- Each thread has its own local cache for small object allocations
+				- Central free list
+				- helps in reducing contention on the central heap and improves performance by minimizing locking overhead
+		- `local allocators` manage memory for a specific context (e.g. a single thread) 
+			- often use a portion of memory allocated by global allocator 
+	- #### Pool Allocators - pre-allocate memory into chunks
+		- use `freelist` - linked list of free spots
+		- return a `void*` memory address of start of chunk
+		- **`multipool`** - Different `memory pool` for each size (16 bytes, 32 etc) to reduce memory fragmentation
+			- **Good to manage small, frequent memory requests efficiently.**
+			- `memory fragmentation` - misalignment caused by small contiguous blocks not being properly aligned and wasting free memory
+	- ##### Linux Kernel System Allocators
+		- Does not directly interface with userspace, but simply sees per process memory and fit that into the frames?
+		- `Buddy allocator` - continuously divides memory into halves while ensuring it fits
+			- Pool allocator where pool sizes are powers of 2 + we merge 
+			- When deallocating: allocator checks if adjacent block (the "buddy") is also free. If both are free, combined to form a larger block and moved to the bigger pool.
+		- `Slab Allocator` - Cache of kernel objects 
+	- **Cache-Friendly Data Structures** - contiguous data structures like arrays > linked list
+- **Data Locality** - keep related variables on the same cache-line
+	- same struct = will be close together
+- **Memory Alignment** - **data types are stored at addresses that are multiples of their sizes**
+	- Leads to optimized access due to alignment with BUS width
+	- CPUs can read 1 word per instruction (8 bytes on 64bit)
+	- By packing structs (through re-ordering or `pragma pack(1)` you can optimize the amount of data fetched per word
+- `Acquire and release` semantics - enforce memory ordering constraints 
+- `RAII` - bind the lifecycle of a resource to the lifecycle of an object
+	- **Constructor initialization, destructor deallocation semantics**
+	- Relies on deterministic destruction, where objects are destroyed immediately when they go out of scope
+- ##### Memory copy
+	- `std::copy(src.begin(), src.end(), dst.begin())`
+	- `strcpy(dst,src)` - Use when copying null-terminated C-style strings
+	- `memcopy()` - Use for raw memory copying
+#### CPU & Caching
+ - Keep cache hot! `Context switching` = flushing out cache
+	 - context of thread includes program counter, stack pointer
+ - `cache line` or `cache block` =  unit of data that can be transferred between cache and main memory (64 bytes on x86)
+	 - `Data locality`: CPU prefetches data around what it needs, and assumes relevant data is there too
+	 - You can't fetch a single variable, the whole cacheline moves from main memory to L1
+ - Cache locality - L1, L2, L3 - fast `SRAM`
+	 - L1 has separate `instruction` and `data` caches
+		 - `instruction cache` - we can assume instructions will be read sequentially, so fetch more to optimize
+		 - `data cache` - can't assume read order so just fetch what was actually asked
+ - How do multicore systems ensure their cache's are in sync? 
+	 - different cores could have multiple versions of the same data on their L1/L2 cache
+	 - `MESI Protocol` cache coherence protocol
+		 - `modified` - written
+		 - `exclusive` - read/ write
+		 - `shared` - cannot write
+		 - `invalid`
+ - Why is context switching bad? What exactly happens during a context switch?
+	 - `context switching` - switching processes (doesnt apply when switching threads on same process)
+	 - Flushes out existing cache  
+	 - CPU must save the state of the current process and load the state of the next process
+	 - Cached data may be replaced by the data of the incoming process
+- Keep the cache hot by invoking important functions frequently
+- `hyperthreading` - 1 core running multiple threads at the same time (intel tech)
+
+#### Performance Optimization
+- CPU optimizations
+	- `pipelining` - multiple instruction streams run in parallel
+		- Goal: to increase CPU utilization
+		- Dependencies within each stream
+		- No dependencies between stream
+		- **fetching, decoding, executing, memory access, write back**
+	- `vectorization` - SIMD instructions - executing the same instruction on multiple data points
+		- For SIMD to work you need to write code that is actively SIMD compatible
+- **Branch prediction** - begin executing assumed path to optimize pipeline
+	- Branch Target Buffer (BTB) - cache where the processor stores what it's predicting
+	- When predicts wrong - pipeline flush
+	- We can **reduce** branches via function templating (compile time resolution)
+	- `static prediction` - always chose the same path
+	- dynamic 1bit prediction - just do what happened last time 
+		- `perf stat ./bin` to get branch misses (even 1% branch misses is too many)
+- Compiler options optimizations
+	- `-01` - optimize for size
+	- `-02 or -03` optimize for speed
+	- Set target architecture for compiler for micro-optimisations (and SIMD instructions)
+	- `--ffast-math` fast floating points at sacrifice for numerical accuracy
+	- `-fno-exceptions` Disable exceptions
+- Link time optimisations
+	- `Unity builds` -> Merge multiple src files  to create 'uber' src file
+		- Conflicts with macros
+		- Speed up compilation and linking
+	- `static linking` - include necessary code in binary at compile time
+	- `dynamic linking` = links library file at runtime (slower)
+- `Profiling` = analysing where a program spends most of its time 
+	- memory = Valgrind (memcheck) to check for memory leaks
+	- `perf` = linux profiling tool
+- `Benchmarking` = Tracking execution
+	- `rdtsc` is an instruction on x86 processors for clock cycle level time-stamping. Low overhead
+
+### Lambdas
+- `auto lambda = [&] { x += y; }; // Captures x and y by reference`
+- `auto lambda = [=] { return x + y; }; // Captures x and y by value`
+- `auto lambda = [&x, &y] { x += y; }; // Captures x and y by reference`
+- `auto lambda = [x, y] { return x + y; }; // Captures x and y by value`
+
+
+### HFT Terms
+- `Colocation` - Place your server in the same data center as the exchange server to reduce latency 
+- Market data is broadcast with `UDP multicast`
+- Market orders are submitted with `TCP` 
