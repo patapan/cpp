@@ -52,7 +52,7 @@ private:
 
         if (new_data) {
             for (size_t i = 0; i < size; ++i) {
-                new (&new_data[i]) T(std::move(data[i])); // Move construct elements
+                new (&new_data[i]) T(std::move(data[i])); // Move construct elements (placement new allows us to allocate on the heap at a specific address)
                 data[i].~T(); // Destroy the old element
             }
 

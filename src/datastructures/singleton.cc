@@ -1,7 +1,7 @@
 
 #include <iostream>
 
-// A class that can only have 1 instance of.
+// A class that can only have 1 instance in the entire program.
 template <typename T>
 class Singleton {
  private:
@@ -32,8 +32,9 @@ class Singleton {
     Singleton& operator=(Singleton&& other) noexcept = delete;
 };
 
+// We must define it out here to make sure it's value initialized.
 template <typename T>
-Singleton<T>* Singleton<T>::instance = nullptr;
+Singleton<T>* Singleton<T>::instance;
 
 int main(){
     Singleton<int>* s = Singleton<int>::get();
