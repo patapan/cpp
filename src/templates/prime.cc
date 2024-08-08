@@ -54,7 +54,6 @@ namespace concepts {
     // template <int N>
     // concept LessThanTwo = (N < 2);
 
-    // specialization for N<2
     template <int N>
     requires (N < 2)
     struct is_prime<N> {

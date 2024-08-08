@@ -1,21 +1,27 @@
 
 #include <stdexcept>
 #include <iostream>
+#include <memory>
 
 template <typename T>
 class Optional {
 public:
-    T data;
+    std::unique_ptr<T> data;
     bool initialized; // whether data is initialized or not.
 
     Optional() {
         initialized = false;
     }
 
-    //  assignment
-    Optional& operator=(T other) noexcept {
+    Optional(const T& t) {
         initialized = true;
-        data = other;
+        data = std::make_unique<T>(t);
+    }    
+
+    //  constructor
+    Optional& operator=(const T& other) noexcept {
+        initialized = true;
+        data = std::make_unique<T>(other);
         return *this;
     }
 
@@ -23,7 +29,7 @@ public:
         if (!initialized) {
             throw std::runtime_error("Optional value not initialized, yet requested");
         }
-        return data;
+        return *data;
     }
 
     bool has_value() const {
@@ -33,14 +39,14 @@ public:
     // Copy constructor 
     Optional(const Optional& other) {
         initialized = other.initialized;
-        if (initialized) data = other.data;
+        if (initialized) data = std::make_unique<T>(*other.data);
     } 
 
     // Copy assignment
     Optional& operator=(const Optional& other) {
         if (this != &other) {
             initialized = other.initialized;
-            if (initialized) data = other.data;
+            if (initialized) data = std::make_unique<T>(*other.data);
         }
         return *this;
     }
