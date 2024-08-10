@@ -24,7 +24,7 @@ int main() {
     // Resolve the hostname to an IP address
     struct hostent *he;
     struct in_addr **addr_list;
-    if ((he = gethostbyname(hostname)) == NULL) {
+    if ((he = gethostbyname(hostname)) == NULL) { // udp
         herror("gethostbyname");
         return 1;
     }
