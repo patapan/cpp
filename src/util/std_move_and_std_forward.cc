@@ -11,6 +11,8 @@ The point of this is to invoke the correct constructor for a given class (copy, 
 
 namespace alex {
 
+// Implement Remove Reference
+
 template <typename T>
 struct remove_reference { 
     using type = T;
@@ -26,13 +28,13 @@ struct remove_reference<T&> {
     using type = T;
 };
 
-// move is a casting operator from L value to R value
+// std::move is a casting operator from L value to R value
 template <typename T>
 constexpr remove_reference<T>::type&& move(T&& t) {
     return static_cast<remove_reference<T>::type&&>(t);
 }
 
-// forward retains the value type of the arg passed in.
+// std::forward retains the value type of the arg passed in.
 template <typename T>
 constexpr T&& forward(typename std::remove_reference<T>::type& t) {
     return static_cast<T&&>(t);
