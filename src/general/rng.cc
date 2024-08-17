@@ -25,6 +25,13 @@ int rand(int N) {
     return choices[(int)(dis(gen) * choices.size())];
 }
 
+int crand() {
+    // srand(time(nullptr))
+
+    return time(nullptr);
+}
+
 int main() {
-    std::cout << rand(10) << std::endl;
+    // std::cout << rand(10) << std::endl;
+    std::cout << crand() << std::endl;
 }
