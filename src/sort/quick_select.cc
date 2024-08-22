@@ -1,5 +1,6 @@
 // https://leetcode.com/problems/kth-largest-element-in-an-array/
-
+// Time complexity: O(n) on average, O(n^2) in the worst case
+// Space complexity: O(n)
 class Solution {
 public:
     int findKthLargest(vector<int>& nums, int k) {
