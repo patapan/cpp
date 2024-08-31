@@ -26,6 +26,7 @@ public:
         return left;
     }
 
+    // THIS ISN'T THE REAL UPPER BOUND FUNCTION BECAUSE IT GIVES THE ITERATOR TO THE STRICTLY GREATER THAN.
     // we do left <= right, because in the last loop the right is decremented below the left
     int upper_bound(vector<int>& nums, int target) {
         int left = 0;
