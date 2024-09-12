@@ -8,8 +8,8 @@ public:
         return {first, last};
     }
 
-    // Returns first index 
-    int lower_bound(vector<int>& nums, int target) {
+    // Returns first index of value in array
+    int firstPosition(vector<int>& nums, int target) {
         int left = 0;
         int right = nums.size() - 1;
 
@@ -26,9 +26,9 @@ public:
         return left;
     }
 
-    // THIS ISN'T THE REAL UPPER BOUND FUNCTION BECAUSE IT GIVES THE ITERATOR TO THE STRICTLY GREATER THAN.
+    // Return the last index of target in array.
     // we do left <= right, because in the last loop the right is decremented below the left
-    int upper_bound(vector<int>& nums, int target) {
+    int lastPosition(vector<int>& nums, int target) {
         int left = 0;
         int right = nums.size() - 1;
 
