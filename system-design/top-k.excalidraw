@@ -1,0 +1,82 @@
+{
+  "type": "excalidraw",
+  "version": 2,
+  "source": "https://marketplace.visualstudio.com/items?itemName=pomdtr.excalidraw-editor",
+  "elements": [
+    {
+      "id": "i1-P_rZdcpRV6wuMqaEjK",
+      "type": "rectangle",
+      "x": 268.88018798828125,
+      "y": 318.78925564553197,
+      "width": 150.34832763671875,
+      "height": 119.599609375,
+      "angle": 0,
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "roundness": {
+        "type": 3
+      },
+      "seed": 1689243827,
+      "version": 38,
+      "versionNonce": 888011411,
+      "isDeleted": false,
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "D_OXxlsTlr-62O_oB_hUu"
+        }
+      ],
+      "updated": 1726357468068,
+      "link": null,
+      "locked": false
+    },
+    {
+      "id": "D_OXxlsTlr-62O_oB_hUu",
+      "type": "text",
+      "x": 318.42437744140625,
+      "y": 366.08906033303197,
+      "width": 51.25994873046875,
+      "height": 25,
+      "angle": 0,
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "roundness": null,
+      "seed": 1354591165,
+      "version": 7,
+      "versionNonce": 48246259,
+      "isDeleted": false,
+      "boundElements": null,
+      "updated": 1726357469688,
+      "link": null,
+      "locked": false,
+      "text": "client",
+      "fontSize": 20,
+      "fontFamily": 1,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "baseline": 18,
+      "containerId": "i1-P_rZdcpRV6wuMqaEjK",
+      "originalText": "client",
+      "lineHeight": 1.25
+    }
+  ],
+  "appState": {
+    "gridSize": null,
+    "viewBackgroundColor": "#f8f9fa"
+  },
+  "files": {}
+}
