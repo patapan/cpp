@@ -11,12 +11,11 @@ We also have a hashmap which points each key to it's associated node in the link
 
 #include <unordered_map>
 
-<template typename K>
+<template typename K, typename V>
 class LRUCache {
 private:
     int capacity;
 
-    <template typename V>
     struct Node {
         V value;
         Node* next;
@@ -25,6 +24,7 @@ private:
         Node(V value) : value(value) {}
     };
 
+    Node* head; // Pointer to front of queue
     unordered_map<K, Node<V>> map;
 
 public:
@@ -35,6 +35,38 @@ public:
     // add a key-value pair into our cache, updating the key if needed.
     bool put(K key, V value) {
         // check if the node exists, else create it.
+        Node node;
+
+        if (map.contains(key)) {
+            // remove it from curr list
+            node = map[key];
+            node.value = value;
+
+            // update ordering
+            if (node->prev) {
+                node->prev->next = node->next;
+            }
+            if (node->next) {
+                node->next->prev = node->prev;
+            }
+        } else {
+            node = Node(value);
+        }
+
+        map[key] = node;
+
+        // Add it to the front of queue
+        Node* prev_head = head->next;
+        prev_head->prev = node;
+        head->next = node;
+        node->next = prev_head;
+        node->prev = head;
+
+        // check if we are now at capacity
+
+        if (map.size() > capacity) {
+            Node<V>
+        }
     }
 
     // remove a key from the cache
