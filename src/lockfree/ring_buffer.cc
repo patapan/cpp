@@ -25,9 +25,6 @@ private:
 
 public:
     RingBuffer() : tail(0), head(0) {}
-    ~RingBuffer() {
-        delete buffer;
-    }
 
     // push to tail
     bool push(const T& item) {
