@@ -114,3 +114,9 @@ int main() {
     }
     std::cout << "got here\n";
 }
+
+
+template <typename T, Args... args>
+SharedPointer<T> make_shared(Args&& ... args) {
+    return SharedPointer(new T(std::forward(args)...));
+}
