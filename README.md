@@ -1,5 +1,5 @@
 Documenting my journey learning low level C++
 
-This repo assumes C++23 + Clang.
+Most files assume >=C++20 + Clang. Might be some C++23 features thrown in occasionally.
 
 Also featuring some system design stuff :)
