@@ -2,7 +2,7 @@
 
 source: https://leetcode.com/discuss/interview-experience/4428743/Meta-Onsite-System-Design-Questions
 
-[] Ad click aggregation system
+[x] Ad click aggregation system
 [] Top 10 songs played on spotify (top-k problem)
 [] Design web crawler
 [] Design a system to store images for FB and insta that would require 1000 uploads per sec and handle duplication.
